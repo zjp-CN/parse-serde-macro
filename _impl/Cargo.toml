@@ -1,0 +1,13 @@
+[package]
+name = "_impl"
+version = "0.1.0"
+edition = "2021"
+publish = ["ktra"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "*", features = ["extra-traits"] }
+proc-macro2 = "*"
+quote = "*"
