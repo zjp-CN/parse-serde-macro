@@ -4,6 +4,7 @@ use syn::{
     parse::{Parse, Parser},
     parse_macro_input,
     punctuated::Punctuated,
+    spanned::Spanned,
     Attribute, Data, DataStruct, DeriveInput, Fields, Ident, LitStr, Meta, Token,
 };
 
@@ -16,8 +17,14 @@ pub fn excel_serialize_derive(input: TokenStream) -> TokenStream {
     }) = input.data
     {
         for field in fields.named {
-            let op: Vec<_> = field.attrs.into_iter().map(parse_meta).collect();
-            println!("field `{}` => {op:?}", field.ident.unwrap());
+            let mut parsed_attrs = Vec::new();
+            for attr in field.attrs {
+                match parse_meta(attr) {
+                    Ok(parsed) => parsed_attrs.extend(parsed),
+                    Err(err) => return err.to_compile_error().into(),
+                }
+            }
+            println!("field `{}` => {parsed_attrs:?}", field.ident.unwrap());
         }
     }
     quote! {}.into() // TODO: generate impl ExcelSerialize for Data
@@ -28,7 +35,7 @@ fn parse_meta(attr: Attribute) -> syn::Result<Vec<AttributeTypes>> {
         Meta::Path(_) => (),
         Meta::List(list) => {
             let Some(ident) = list.path.get_ident() else {
-                return Ok(Vec::new());
+                return Err(syn::Error::new(list.path.span(), "need an ident"));
             };
             if ident == "rust_xlsxwriter" || ident == "xlsxwriter" || ident == "serde" {
                 // e.g. #[ident(one)] or #[ident(one, two)] or #[ident(one, two, ...)]
@@ -65,8 +72,8 @@ impl Parse for AttributeTypes {
             Ok(Self::NumFormat(input.parse()?))
         } else {
             Err(syn::Error::new(
-                input.span(),
-                "Not supported by ExcelSerialize derive macro",
+                ident.span(),
+                format!("`{ident}` is not supported by ExcelSerialize derive macro"),
             ))
         }
     }
