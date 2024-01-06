@@ -35,7 +35,10 @@ fn parse_meta(attr: Attribute) -> syn::Result<Vec<AttributeTypes>> {
         Meta::Path(_) => (),
         Meta::List(list) => {
             let Some(ident) = list.path.get_ident() else {
-                return Err(syn::Error::new(list.path.span(), "need an ident"));
+                return Err(syn::Error::new(
+                    list.path.span(),
+                    "need an ident such as rust_xlsxwriter, xlsxwriter or serde",
+                ));
             };
             if ident == "rust_xlsxwriter" || ident == "xlsxwriter" || ident == "serde" {
                 // e.g. #[ident(one)] or #[ident(one, two)] or #[ident(one, two, ...)]
