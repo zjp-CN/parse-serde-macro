@@ -6,6 +6,7 @@ fn main() {}
 // field `d` => [Rename(LitStr { token: "rust_xlsxwriter rename for d" }), NumFormat(LitStr { token: "$0.00" })]
 // field `e` => [Rename(LitStr { token: "xlsxwriter rename for e" }), NumFormat(LitStr { token: "$0.00" })]
 // field `f` => [Skip]
+// field `g` => [FormatObj(Expr::MethodCall { ... })]
 #[derive(_impl::ExcelSerialize, serde::Serialize)]
 pub struct A {
     #[serde(rename = "serde rename for b")]
@@ -20,6 +21,20 @@ pub struct A {
     e: (),
     #[xlsxwriter(skip)]
     f: (),
+
+    #[xlsxwriter(value_format = Format::new().set_bold())]
+    g1: (),
+}
+
+pub struct Format;
+impl Format {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Format {
+        Format
+    }
+    pub fn set_bold(self) -> Format {
+        self
+    }
 }
 
 // error: `not_exist` is not supported by ExcelSerialize derive macro
@@ -27,8 +42,8 @@ pub struct A {
 //    |
 // 40 |     #[xlsxwriter(not_exist)]
 //    |                  ^^^^^^^^^
-#[derive(_impl::ExcelSerialize, serde::Serialize)]
-pub struct B {
-    #[xlsxwriter(not_exist)]
-    f: (),
-}
+// #[derive(_impl::ExcelSerialize, serde::Serialize)]
+// pub struct B {
+//     #[xlsxwriter(not_exist)]
+//     f: (),
+// }

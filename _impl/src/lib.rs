@@ -5,7 +5,7 @@ use syn::{
     parse_macro_input,
     punctuated::Punctuated,
     spanned::Spanned,
-    Attribute, Data, DataStruct, DeriveInput, Fields, Ident, LitStr, Meta, Token,
+    Attribute, Data, DataStruct, DeriveInput, Expr, Fields, Ident, LitStr, Meta, Token,
 };
 
 #[proc_macro_derive(ExcelSerialize, attributes(rust_xlsxwriter, xlsxwriter))]
@@ -57,6 +57,7 @@ enum AttributeTypes {
     Skip,
     Rename(LitStr),
     NumFormat(LitStr),
+    FormatObj(Expr),
 }
 
 // Parse tokens in meta list, ignoring the meta path.
@@ -73,6 +74,9 @@ impl Parse for AttributeTypes {
         } else if ident == "num_format" {
             let _ = input.parse::<Token![=]>()?;
             Ok(Self::NumFormat(input.parse()?))
+        } else if ident == "value_format" {
+            let _ = input.parse::<Token![=]>()?;
+            Ok(Self::FormatObj(input.parse()?))
         } else {
             Err(syn::Error::new(
                 ident.span(),
